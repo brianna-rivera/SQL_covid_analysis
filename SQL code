@@ -43,12 +43,13 @@ JOIN covid_portfolio.covid_vaccinations vac
 ON dea.location = vac.location
 AND dea.date = vac.date;
 
---Looking at total population vs. vaccinations
-SELECT dea.continent, dea.location, dea.date, dea.population, vac.new_vaccinations
+--Looking at total population vs. vaccinations, using CTE to create temp tables and joined datasets
+WITH PopvsVac as (SELECT dea.continent, dea.location, dea.date, dea.population, vac.new_vaccinations, SUM(vac.new_vaccinations) OVER (partition by dea.location ORDER BY dea.location, dea.date) as rolling_people_vaccinated
 FROM covid_portfolio.Covid_deaths dea
 JOIN covid_portfolio.covid_vaccinations vac
 ON dea.location = vac.location
 AND dea.date = vac.date
-WHERE dea.continent is not null
-ORDER BY dea.continent, dea.location, dea.date
+WHERE dea.continent is not null)
+
+SELECT *, (rolling_people_vaccinated/population*100) FROM PopvsVac
 
